@@ -9,6 +9,10 @@ const responseServerError = (res, message) => res
   .status(constants.HTTP_STATUS_SERVICE_UNAVAILABLE)
   .send({ message: `На сервере произошла ошибка. ${message}` });
 
+const responseNotFound = (res, message) => res
+  .status(constants.HTTP_STATUS_NOT_FOUND)
+  .send({ message: `Данные не найдены. ${message}` });
+
 export const getCards = (req, res) => {
   Card.find({})
     .then((cards) => res.send(cards))
@@ -37,7 +41,13 @@ export const createCard = (req, res) => {
 
 export const deleteCard = (req, res) => {
   Card.findByIdAndRemove(req.params.cardId)
-    .then((card) => res.send({ data: card }))
+    .then((card) => {
+      if (!card) {
+        responseNotFound(res, '');
+      } else {
+        res.send({ data: card });
+      }
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         responseBadRequestError(res, err.message);
@@ -53,7 +63,13 @@ export const putLike = (req, res) => {
     { $addToSet: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (!card) {
+        responseNotFound(res, '');
+      } else {
+        res.send(card);
+      }
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         responseBadRequestError(res, err.message);
@@ -69,7 +85,13 @@ export const deleteLike = (req, res) => {
     { $pull: { likes: req.user._id } },
     { new: true },
   )
-    .then((card) => res.send(card))
+    .then((card) => {
+      if (!card) {
+        responseNotFound(res, '');
+      } else {
+        res.send(card);
+      }
+    })
     .catch((err) => {
       if (err.name === 'CastError') {
         responseBadRequestError(res, err.message);
