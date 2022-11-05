@@ -27,7 +27,7 @@ export const createCard = (req, res) => {
   Card.create({ name, link, owner })
     .then((card) => res.send(card))
     .catch((err) => {
-      if (err.name === 'ValidatorError') {
+      if (err.name === 'ValidationError') {
         responseBadRequestError(res, err.message);
       } else {
         responseServerError(res, err.message);

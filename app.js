@@ -23,6 +23,8 @@ app.use((req, res, next) => {
   next();
 });
 
+mongoose.set('runValidators', true);
+
 app.use('/users', userRouter);
 
 app.use('/cards', cardsRouter);
