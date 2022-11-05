@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import express from 'express';
 import bodyParser from 'body-parser';
+import { constants } from 'http2';
 import { router as userRouter } from './routes/users.js';
 import { router as cardsRouter } from './routes/cards.js';
 
@@ -28,6 +29,10 @@ mongoose.set('runValidators', true);
 app.use('/users', userRouter);
 
 app.use('/cards', cardsRouter);
+
+app.use((req, res) => {
+  res.status(constants.HTTP_STATUS_NOT_FOUND).send({ message: 'Страница не найдена' });
+});
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
