@@ -1,4 +1,6 @@
 import { constants } from 'http2';
+import { jwt } from 'jsonwebtoken';
+import { bcrypt } from 'bcryptjs';
 import User from '../models/user.js';
 
 const responseBadRequestError = (res) => res
@@ -12,6 +14,10 @@ const responseServerError = (res) => res
 const responseNotFound = (res) => res
   .status(constants.HTTP_STATUS_NOT_FOUND)
   .send({ message: 'Данные не найдены.' });
+
+const responseUnauthorized = (res) => res
+  .status(constants.HTTP_STATUS_UNAUTHORIZED)
+  .send({ message: 'Требуется авторизация.' });
 
 export const getUsers = (req, res) => {
   User.find({})
@@ -40,12 +46,36 @@ export const getUserById = (req, res) => {
 };
 
 export const createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
+  bcrypt.hash(req.body.password, 10)
+    .then((hash) => User.create({
+      email: req.body.email,
+      password: hash,
+    }));
+  User.create({
+    name, about, avatar, email, password,
+  })
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
         responseBadRequestError(res, err.message);
+      } else {
+        responseServerError(res, err.message);
+      }
+    });
+};
+
+export const login = (req, res) => {
+  User.findOneAndValidatePassword(req.body)
+    .then((userData) => {
+      const token = jwt.sign({ _id: userData._id }, jwt.JWT_SALT, { expiresIn: '7d' });
+      res.send({ token });
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        responseUnauthorized(res, err.message);
       } else {
         responseServerError(res, err.message);
       }
