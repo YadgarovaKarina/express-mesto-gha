@@ -1,4 +1,4 @@
-import { Joi, celebrate } from 'celebrate';
+import { Joi, celebrate, Segments } from 'celebrate';
 import { urlSchema } from '../models/user.js';
 
 export const userIdValidator = celebrate({
@@ -8,13 +8,13 @@ export const userIdValidator = celebrate({
 });
 
 export const userBodyValidator = celebrate({
-  body: Joi.object().keys({
+  [Segments.BODY]: Joi.object().keys({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
     avatar: Joi.string().pattern(urlSchema).uri({ scheme: ['http', 'https'] }),
     email: Joi.string().email().required(),
     password: Joi.string().required(),
-  }),
+  }).required(),
 });
 
 export const userProfileValidator = celebrate({
