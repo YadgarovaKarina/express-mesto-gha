@@ -1,8 +1,7 @@
 import { Joi, celebrate, Segments } from 'celebrate';
-import { urlSchema } from '../models/user.js';
 
 export const userIdValidator = celebrate({
-  params: Joi.object({
+  [Segments.PARAMS]: Joi.object({
     cardId: Joi.string().hex().length(24).required(),
   }).required(),
 });
@@ -11,27 +10,27 @@ export const userBodyValidator = celebrate({
   [Segments.BODY]: Joi.object({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
-    avatar: Joi.string().pattern(urlSchema).uri({ scheme: ['http', 'https'] }),
+    avatar: Joi.string().uri({ scheme: ['http', 'https'] }),
     email: Joi.string().email().required(),
     password: Joi.string().required(),
   }).required(),
 });
 
 export const userProfileValidator = celebrate({
-  body: Joi.object().keys({
+  [Segments.BODY]: Joi.object({
     name: Joi.string().min(2).max(30).required(),
     about: Joi.string().min(2).max(30).required(),
   }),
 });
 
 export const userAvatarValidator = celebrate({
-  body: Joi.object().keys({
-    avatar: Joi.string().pattern(urlSchema).uri({ scheme: ['http', 'https'] }).required(),
+  [Segments.BODY]: Joi.object({
+    avatar: Joi.string().uri({ scheme: ['http', 'https'] }).required(),
   }),
 });
 
 export const userLoginValidator = celebrate({
-  body: Joi.object().keys({
+  [Segments.BODY]: Joi.object({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
   }),
