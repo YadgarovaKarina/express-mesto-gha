@@ -1,21 +1,18 @@
-import { jwt } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+import { UnauthorizedError } from '../errors/UnauthorizedError.js';
 
 export const auth = (req, res, next) => {
-  const { authorization } = req.headers;
-  if (!authorization || !authorization.startsWith('Bearer ')) {
-    return res
-      .status(401)
-      .send({ message: 'Необходима авторизация' });
+  const { authorization = '' } = req.headers;
+  if (!authorization) {
+    next(new UnauthorizedError('Необходима авторизация'));
+  } else {
+    const token = authorization.replace(/^Bearer*\s*/i, '');
+    try {
+      const decoded = jwt.verify(token, 'some-secret-key');
+      req.user = { _id: decoded._id };
+      next();
+    } catch (err) {
+      next(new UnauthorizedError('Необходима авторизация'));
+    }
   }
-  const token = authorization.replace('Bearer ', '');
-  let payload;
-  try {
-    payload = jwt.verify(token, jwt.JWT_SALT);
-  } catch (err) {
-    return res
-      .status(401)
-      .send({ message: 'Необходима авторизация' });
-  }
-  req.user = payload;
-  next();
 };

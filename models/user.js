@@ -1,8 +1,7 @@
 import mongoose from 'mongoose';
-import { Joi } from 'celebrate';
+import isEmail from 'validator/lib/isEmail.js';
 
-const emailSchema = Joi.string().email().required();
-const urlSchema = Joi.string().uri({ scheme: ['http', 'https'] }).required(); // дописать валидацию
+export const urlSchema = /^https?:\/\/(www\.)?[a-zA-Z\0-9]+\.[\w\-._~:/?#[\]@!$&'()*+,;=]{2,}#?$/;
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -29,7 +28,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     unique: true,
     validate: {
-      validator: (value) => !emailSchema.validate(value).error,
+      validator: (v) => isEmail(v),
       message: () => 'Почта должна быть вида a@b.c',
     },
   },
@@ -39,5 +38,10 @@ const userSchema = new mongoose.Schema({
     select: false,
   },
 });
+
+// userSchema.findOne({ email }).select('+password')
+//   .then((user) => {
+//     // здесь в объекте user будет хеш пароля
+//   });
 
 export default mongoose.model('user', userSchema);

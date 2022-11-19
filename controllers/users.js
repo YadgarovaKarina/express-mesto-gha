@@ -1,51 +1,39 @@
-import { constants } from 'http2';
-import { jwt } from 'jsonwebtoken';
-import { bcrypt } from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import User from '../models/user.js';
+import { ServerError } from '../errors/ServerError.js';
+import { BadRequestError } from '../errors/BadRequestError.js';
+import { NotFoundError } from '../errors/NotFoundError.js';
+import { UnauthorizedError } from '../errors/UnauthorizedError.js';
+import { ConflictError } from '../errors/ConflictError.js';
 
-const responseBadRequestError = (res) => res
-  .status(constants.HTTP_STATUS_BAD_REQUEST)
-  .send({ message: 'Некорректные данные пользователя.' });
-
-const responseServerError = (res) => res
-  .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-  .send({ message: 'На сервере произошла ошибка.' });
-
-const responseNotFound = (res) => res
-  .status(constants.HTTP_STATUS_NOT_FOUND)
-  .send({ message: 'Данные не найдены.' });
-
-const responseUnauthorized = (res) => res
-  .status(constants.HTTP_STATUS_UNAUTHORIZED)
-  .send({ message: 'Требуется авторизация.' });
-
-export const getUsers = (req, res) => {
+export const getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch((err) => {
-      responseServerError(res, err.message);
+    .catch(() => {
+      next(new ServerError('На сервере произошла ошибка'));
     });
 };
 
-export const getUserById = (req, res) => {
+export const getUserById = (req, res, next) => {
   User.findById({ _id: req.params.userId })
     .then((user) => {
       if (!user) {
-        responseNotFound(res, '');
+        next(new NotFoundError('Данные не найдены'));
       } else {
         res.send(user);
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        responseBadRequestError(res, err.message);
+        next(new BadRequestError('Введены некорректные данные'));
       } else {
-        responseServerError(res, err.message);
+        next(new ServerError('На сервере произошла ошибка'));
       }
     });
 };
 
-export const createUser = (req, res) => {
+export const createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -60,52 +48,69 @@ export const createUser = (req, res) => {
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        responseBadRequestError(res, err.message);
+        next(new BadRequestError('Введены некорректные данные'));
+      } else if (err.code === 11000) {
+        next(new ConflictError('Пользователь с такой почтой уже зарегистрирован'));
       } else {
-        responseServerError(res, err.message);
+        next(new ServerError('На сервере произошла ошибка'));
       }
     });
 };
 
-export const login = (req, res) => {
-  User.findOneAndValidatePassword(req.body)
+export const login = (req, res, next) => {
+  const { email, password } = req.body;
+  User.findOneAndValidatePassword(email, password)
     .then((userData) => {
       const token = jwt.sign({ _id: userData._id }, jwt.JWT_SALT, { expiresIn: '7d' });
       res.send({ token });
     })
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        responseUnauthorized(res, err.message);
-      } else {
-        responseServerError(res, err.message);
-      }
+    .catch(() => {
+      next(new UnauthorizedError('Необходима авторизация'));
     });
 };
 
-export const updateUserProfile = (req, res) => {
+export const readOne = (req, res, next) => {
+  const id = (req.params.id === 'me') ? req.user._id : req.params.id;
+  User.findById(id)
+    .then((user) => {
+      if (user) {
+        res.send(user);
+      } else {
+        next(new NotFoundError('Пользователь не найден'));
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new BadRequestError('Введены некорректные данные'));
+      } else {
+        next(new ServerError('На сервере произошла ошибка'));
+      }
+    });
+};
+export const updateUserProfile = (req, res, next) => {
   const { name, about } = req.body;
   const userId = req.user._id;
   User.findByIdAndUpdate(userId, { name, about }, { new: true })
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        responseBadRequestError(res, err.message);
+        next(new BadRequestError('Введены некорректные данные'));
       } else {
-        responseServerError(res, err.message);
+        next(new ServerError('На сервере произошла ошибка'));
       }
     });
 };
 
-export const updateUserAvatar = (req, res) => {
+export const updateUserAvatar = (req, res, next) => {
   const { avatar } = req.body;
   const userId = req.user._id;
   User.findByIdAndUpdate(userId, { avatar }, { new: true })
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError' || err.name === 'ValidationError') {
-        responseBadRequestError(res, err.message);
+        next(new BadRequestError('Введены некорректные данные'));
       } else {
-        responseServerError(res, err.message);
+        next(new ServerError('На сервере произошла ошибка'));
       }
     });
 };

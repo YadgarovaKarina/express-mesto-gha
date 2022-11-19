@@ -1,59 +1,49 @@
-import { constants } from 'http2';
 import Card from '../models/card.js';
+import { ServerError } from '../errors/ServerError.js';
+import { BadRequestError } from '../errors/BadRequestError.js';
+import { NotFoundError } from '../errors/NotFoundError.js';
 
-const responseBadRequestError = (res) => res
-  .status(constants.HTTP_STATUS_BAD_REQUEST)
-  .send({ message: 'Некорректные данные пользователя.' });
-
-const responseServerError = (res) => res
-  .status(constants.HTTP_STATUS_INTERNAL_SERVER_ERROR)
-  .send({ message: 'На сервере произошла ошибка.' });
-
-const responseNotFound = (res) => res
-  .status(constants.HTTP_STATUS_NOT_FOUND)
-  .send({ message: 'Данные не найдены.' });
-
-export const getCards = (req, res) => {
+export const getCards = (req, res, next) => {
   Card.find({})
-    .then((cards) => res.send(cards))
-    .catch((err) => {
-      responseServerError(res, err.message);
+    .then((cards) => res.send({ data: cards }))
+    .catch(() => {
+      next(new ServerError('На сервере произошла ошибка'));
     });
 };
 
-export const createCard = (req, res) => {
+export const createCard = (req, res, next) => {
   const owner = req.user._id;
   const { name, link } = req.body;
   Card.create({ name, link, owner })
     .then((card) => res.send(card))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        responseBadRequestError(res, err.message);
+        next(new BadRequestError('Введены некорректные данные'));
       } else {
-        responseServerError(res, err.message);
+        next(new ServerError('Ошибка сервера'));
       }
     });
 };
 
-export const deleteCard = (req, res) => {
+export const deleteCard = (req, res, next) => {
   Card.findByIdAndRemove(req.params.cardId)
     .then((card) => {
       if (!card) {
-        responseNotFound(res, '');
+        next(new NotFoundError('Данные не найдены'));
       } else {
         res.send({ data: card });
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        responseBadRequestError(res, err.message);
+        next(new BadRequestError('Введены некорректные данные'));
       } else {
-        responseServerError(res, err.message);
+        next(new ServerError('Ошибка сервера'));
       }
     });
 };
 
-export const putLike = (req, res) => {
+export const putLike = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
@@ -61,21 +51,21 @@ export const putLike = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        responseNotFound(res, '');
+        next(new NotFoundError('Данные не найдены'));
       } else {
         res.send(card);
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        responseBadRequestError(res, err.message);
+        next(new BadRequestError('Введены некорректные данные'));
       } else {
-        responseServerError(res, err.message);
+        next(new ServerError('Ошибка сервера'));
       }
     });
 };
 
-export const deleteLike = (req, res) => {
+export const deleteLike = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
@@ -83,16 +73,16 @@ export const deleteLike = (req, res) => {
   )
     .then((card) => {
       if (!card) {
-        responseNotFound(res, '');
+        next(new NotFoundError('Данные не найдены'));
       } else {
         res.send(card);
       }
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        responseBadRequestError(res, err.message);
+        next(new BadRequestError('Введены некорректные данные'));
       } else {
-        responseServerError(res, err.message);
+        next(new ServerError('Ошибка сервера'));
       }
     });
 };
