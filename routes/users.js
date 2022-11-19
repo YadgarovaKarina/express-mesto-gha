@@ -10,15 +10,14 @@ import {
 
 import {
   userIdValidator,
-  userBodyValidator,
   userProfileValidator,
   userAvatarValidator,
 } from '../validators/userValidator.js';
 
 export const router = Router();
 
-router.get('/', userBodyValidator, getUsers);
+router.get('/', getUsers);
 router.get('/:userId', userIdValidator, getUserById);
-router.get('/me', userProfileValidator, readOne);
+router.get('/me', readOne);
 router.patch('/me', userProfileValidator, updateUserProfile);
 router.patch('/me/avatar', userAvatarValidator, updateUserAvatar);

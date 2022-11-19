@@ -41,7 +41,7 @@ export const deleteCard = (req, res, next) => {
         next(new ServerError('Ошибка сервера'));
       }
     });
-};
+}; // найти карточку, сравнить cars owner и id и метод remove
 
 export const putLike = (req, res, next) => {
   Card.findByIdAndUpdate(

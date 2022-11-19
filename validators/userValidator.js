@@ -2,7 +2,7 @@ import { Joi, celebrate, Segments } from 'celebrate';
 
 export const userIdValidator = celebrate({
   [Segments.PARAMS]: Joi.object({
-    cardId: Joi.string().hex().length(24).required(),
+    userId: Joi.string().hex().length(24).required(),
   }).required(),
 });
 
