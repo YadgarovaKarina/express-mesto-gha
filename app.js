@@ -22,8 +22,6 @@ mongoose.set('runValidators', true);
 
 app.use(auth);
 
-app.use(errors());
-
 app.use('/users', auth, userRouter);
 
 app.use('/cards', auth, cardsRouter);
@@ -31,6 +29,8 @@ app.use('/cards', auth, cardsRouter);
 app.post('/signin', userLoginValidator, login);
 
 app.post('/signup', userBodyValidator, createUser);
+
+app.use(errors());
 
 app.all('/*', (req, res, next) => {
   next(new NotFoundError('Страница не существует'));
