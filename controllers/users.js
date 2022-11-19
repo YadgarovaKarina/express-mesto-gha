@@ -70,8 +70,7 @@ export const login = (req, res, next) => {
 };
 
 export const readOne = (req, res, next) => {
-  const id = (req.params.id === 'me') ? req.user._id : req.params.id;
-  User.findById(id)
+  User.findById(req.user._id)
     .then((user) => {
       if (user) {
         res.send(user);
@@ -87,6 +86,7 @@ export const readOne = (req, res, next) => {
       }
     });
 };
+
 export const updateUserProfile = (req, res, next) => {
   const { name, about } = req.body;
   const userId = req.user._id;
