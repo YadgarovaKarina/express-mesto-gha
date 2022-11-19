@@ -3,10 +3,12 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import { errors } from 'celebrate';
 import { constants } from 'http2';
+import { NotFoundError } from './errors/NotFoundError.js';
 import { router as userRouter } from './routes/users.js';
 import { router as cardsRouter } from './routes/cards.js';
 import { login, createUser } from './controllers/users.js';
 import { auth } from './middlewares/auth.js';
+import { userBodyValidator, userLoginValidator } from './validators/userValidator.js';
 
 const { PORT = 3000 } = process.env;
 
@@ -26,12 +28,19 @@ app.use('/users', auth, userRouter);
 
 app.use('/cards', auth, cardsRouter);
 
-app.post('/signin', login);
+app.post('/signin', userLoginValidator, login);
 
-app.post('/signup', createUser);
+app.post('/signup', userBodyValidator, createUser);
 
-app.use((req, res) => {
-  res.status(constants.HTTP_STATUS_NOT_FOUND).send({ message: 'Страница не найдена' });
+app.all('/*', (req, res, next) => {
+  next(new NotFoundError('Страница не существует'));
+});
+
+app.use((err, req, res, next) => {
+  const status = err.statusCode || constants.HTTP_STATUS_INTERNAL_SERVER_ERROR;
+  const message = err.message || 'Неизвестная ошибка';
+  res.status(status).send({ message });
+  next();
 });
 
 app.listen(PORT, () => {

@@ -59,13 +59,13 @@ export const createUser = (req, res, next) => {
 
 export const login = (req, res, next) => {
   const { email, password } = req.body;
-  User.findOneAndValidatePassword(email, password)
-    .then((userData) => {
-      const token = jwt.sign({ _id: userData._id }, jwt.JWT_SALT, { expiresIn: '7d' });
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
       res.send({ token });
     })
     .catch(() => {
-      next(new UnauthorizedError('Необходима авторизация'));
+      next(new UnauthorizedError('Неверный логин или пароль'));
     });
 };
 
