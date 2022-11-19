@@ -17,7 +17,7 @@ import {
 export const router = Router();
 
 router.get('/', getUsers);
-router.get('/:userId', userIdValidator, getUserById);
 router.get('/me', readOne);
+router.get('/:userId', userIdValidator, getUserById);
 router.patch('/me', userProfileValidator, updateUserProfile);
 router.patch('/me/avatar', userAvatarValidator, updateUserAvatar);
