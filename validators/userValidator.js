@@ -8,7 +8,7 @@ export const userIdValidator = celebrate({
 });
 
 export const userBodyValidator = celebrate({
-  [Segments.BODY]: Joi.object().keys({
+  [Segments.BODY]: Joi.object({
     name: Joi.string().min(2).max(30),
     about: Joi.string().min(2).max(30),
     avatar: Joi.string().pattern(urlSchema).uri({ scheme: ['http', 'https'] }),
