@@ -20,15 +20,15 @@ app.use(bodyParser.json());
 
 mongoose.set('runValidators', true);
 
-app.use(auth);
-
-app.use('/users', auth, userRouter);
-
-app.use('/cards', auth, cardsRouter);
-
 app.post('/signin', userLoginValidator, login);
 
 app.post('/signup', userBodyValidator, createUser);
+
+app.use(auth);
+
+app.use('/users', userRouter);
+
+app.use('/cards', cardsRouter);
 
 app.use(errors());
 
