@@ -45,7 +45,10 @@ export const createUser = (req, res, next) => {
       email,
       password: hash,
     }))
-    .then((user) => res.send(user))
+    .then((document) => {
+      const { password: removed, ...user } = document.toObject();
+      res.send(user);
+    })
     .catch((err) => {
       if (err.name === 'ValidationError') {
         next(new BadRequestError('Введены некорректные данные'));
