@@ -7,9 +7,7 @@ import { ForbiddenError } from '../errors/ForbiddenError.js';
 export const getCards = (req, res, next) => {
   Card.find({})
     .then((cards) => res.send({ data: cards }))
-    .catch(() => {
-      next(new ServerError('На сервере произошла ошибка'));
-    });
+    .catch(next);
 };
 
 export const createCard = (req, res, next) => {
@@ -27,7 +25,7 @@ export const createCard = (req, res, next) => {
 };
 
 export const deleteCard = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .then((card) => {
       if (!card) {
         next(new NotFoundError('Данные не найдены'));

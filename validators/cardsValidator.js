@@ -1,4 +1,5 @@
 import { Joi, celebrate, Segments } from 'celebrate';
+import { urlSchema } from './userValidator';
 
 export const cardIdValidator = celebrate({
   [Segments.PARAMS]: Joi.object({
@@ -9,6 +10,6 @@ export const cardIdValidator = celebrate({
 export const cardBodyValidator = celebrate({
   [Segments.BODY]: Joi.object({
     name: Joi.string().min(2).max(30).required(),
-    link: Joi.string().uri({ scheme: ['http', 'https'] }).required(),
+    link: Joi.string().pattern(urlSchema).uri({ scheme: ['http', 'https'] }).required(),
   }),
 });

@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 import isEmail from 'validator/lib/isEmail.js';
 import isUrl from 'validator/lib/isURL.js';
+import { UnauthorizedError } from '../errors/UnauthorizedError.js';
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -45,12 +46,12 @@ userSchema.statics.findUserByCredentials = function findUserByCredentials(email,
     .select('+password')
     .then((document) => {
       if (!document) {
-        return Promise.reject(new Error('Неправильные почта или пароль'));
+        return Promise.reject(new UnauthorizedError('Неправильные почта или пароль'));
       }
       return bcrypt.compare(password, document.password)
         .then((matched) => {
           if (!matched) {
-            return Promise.reject(new Error('Неправильные почта или пароль'));
+            return Promise.reject(new UnauthorizedError('Неправильные почта или пароль'));
           }
           const user = document.toObject();
           delete user.password;
