@@ -2,6 +2,7 @@ import Card from '../models/card.js';
 import { ServerError } from '../errors/ServerError.js';
 import { BadRequestError } from '../errors/BadRequestError.js';
 import { NotFoundError } from '../errors/NotFoundError.js';
+import { ForbiddenError } from '../errors/ForbiddenError.js';
 
 export const getCards = (req, res, next) => {
   Card.find({})
@@ -30,7 +31,10 @@ export const deleteCard = (req, res, next) => {
     .then((card) => {
       if (!card) {
         next(new NotFoundError('Данные не найдены'));
+      } else if (card.owner.toString() !== req.user._id) {
+        next(new ForbiddenError('Доступ запрещен'));
       } else {
+        card.remove();
         res.send({ data: card });
       }
     })
@@ -41,7 +45,7 @@ export const deleteCard = (req, res, next) => {
         next(new ServerError('Ошибка сервера'));
       }
     });
-}; // найти карточку, сравнить cars owner и id и метод remove
+};
 
 export const putLike = (req, res, next) => {
   Card.findByIdAndUpdate(
