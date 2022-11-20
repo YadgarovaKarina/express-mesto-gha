@@ -1,5 +1,6 @@
 import { Joi, celebrate, Segments } from 'celebrate';
-import { urlSchema } from './userValidator';
+
+export const urlSchema = /^https?:\/\/(www\.)?[a-zA-Z\0-9]+\.[\w\-._~:/?#[\]@!$&'()*+,;=]{2,}#?$/;
 
 export const cardIdValidator = celebrate({
   [Segments.PARAMS]: Joi.object({
